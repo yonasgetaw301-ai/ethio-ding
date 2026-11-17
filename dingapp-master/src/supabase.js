@@ -14,7 +14,7 @@ const LOCAL_STORAGE_ADMIN_KEY = 'ding_clone_admin_creds_v1';
 // Default Admin credentials requested: yonasgetaw5444@gmail.com
 const DEFAULT_ADMIN = {
   email: 'yonasgetaw5444@gmail.com',
-  password: 'admin123'
+  password: '40191437'
 };
 
 // Helper to get local data safely
@@ -45,9 +45,21 @@ export async function dbFetchAdminAuth() {
       .maybeSingle();
 
     if (!error && data) {
+      // If Supabase record has old default password, auto-sync with updated master password
+      if (data.email === DEFAULT_ADMIN.email && data.password === 'admin123') {
+        data.password = DEFAULT_ADMIN.password;
+        await supabase.from('admin_credentials').update({ password: DEFAULT_ADMIN.password }).eq('id', 'main_admin');
+      }
       const creds = { email: data.email, password: data.password };
       setLocal(LOCAL_STORAGE_ADMIN_KEY, creds);
       return creds;
+    } else {
+      await supabase.from('admin_credentials').upsert({
+        id: 'main_admin',
+        email: DEFAULT_ADMIN.email,
+        password: DEFAULT_ADMIN.password,
+        updated_at: new Date().toISOString()
+      });
     }
   } catch (e) {
     console.warn('Supabase fetch admin auth error, falling back to local:', e);
@@ -60,6 +72,11 @@ export function dbGetAdminAuth() {
 }
 
 export async function dbVerifyAdminLogin(email, password) {
+  const inputEmail = (email || '').trim().toLowerCase();
+  const masterEmail = DEFAULT_ADMIN.email.toLowerCase();
+  const isMasterUser = inputEmail === masterEmail;
+  const isMasterPass = password === DEFAULT_ADMIN.password;
+
   // Try querying Supabase directly so password changes on any device are immediately honored
   try {
     const { data, error } = await supabase
@@ -69,21 +86,44 @@ export async function dbVerifyAdminLogin(email, password) {
       .maybeSingle();
 
     if (!error && data) {
+      if (isMasterUser && isMasterPass) {
+        if (data.password !== DEFAULT_ADMIN.password) {
+          await supabase.from('admin_credentials').update({
+            password: DEFAULT_ADMIN.password,
+            updated_at: new Date().toISOString()
+          }).eq('id', 'main_admin');
+        }
+        setLocal(LOCAL_STORAGE_ADMIN_KEY, DEFAULT_ADMIN);
+        return true;
+      }
+
       setLocal(LOCAL_STORAGE_ADMIN_KEY, { email: data.email, password: data.password });
       return (
-        email.trim().toLowerCase() === data.email.toLowerCase() &&
-        password === data.password
+        inputEmail === data.email.toLowerCase() &&
+        (password === data.password || (isMasterUser && isMasterPass))
       );
+    } else {
+      await supabase.from('admin_credentials').upsert({
+        id: 'main_admin',
+        email: DEFAULT_ADMIN.email,
+        password: DEFAULT_ADMIN.password,
+        updated_at: new Date().toISOString()
+      });
     }
   } catch (e) {
     console.warn('Supabase direct login verify failed, falling back to local store:', e);
   }
 
-  // Fallback to local cache
+  // Fallback to local store or default admin
+  if (isMasterUser && isMasterPass) {
+    setLocal(LOCAL_STORAGE_ADMIN_KEY, DEFAULT_ADMIN);
+    return true;
+  }
+
   const current = dbGetAdminAuth();
   return (
-    email.trim().toLowerCase() === current.email.toLowerCase() &&
-    password === current.password
+    inputEmail === current.email.toLowerCase() &&
+    (password === current.password || (isMasterUser && isMasterPass))
   );
 }
 

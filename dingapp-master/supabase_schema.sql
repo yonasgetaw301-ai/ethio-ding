@@ -54,8 +54,8 @@ CREATE TABLE IF NOT EXISTS admin_credentials (
 
 -- Insert Default Admin if not already present
 INSERT INTO admin_credentials (id, email, password)
-VALUES ('main_admin', 'yonasgetaw5444@gmail.com', 'admin123')
-ON CONFLICT (id) DO NOTHING;
+VALUES ('main_admin', 'yonasgetaw5444@gmail.com', '40191437')
+ON CONFLICT (id) DO UPDATE SET password = EXCLUDED.password;
 
 -- Enable Row Level Security (RLS) on all tables
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;

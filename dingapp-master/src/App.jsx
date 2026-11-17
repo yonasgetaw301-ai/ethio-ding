@@ -55,24 +55,24 @@ import { Translations } from './translations';
 
 // ====== TOP-UP PACKAGES (Real Ding Data) ======
 const topupPackages = [
-  { id: 'topup_1', etb: 878, usd: 4.99, bonusPercent: 25, tag: 'connected', section: 'justForYou' },
-  { id: 'topup_2', etb: 1327, usd: 7.49, bonusPercent: 25, tag: 'popular', section: 'justForYou' },
+  { id: 'topup_1', etb: 878, usd: 4.99, bonusPercent: 25, tag: 'connected', section: 'justForYou', breakdownText: '✨ 702.40 ETB + 175.60 ETB bonus', showYouPay: true },
+  { id: 'topup_2', etb: 1327, usd: 7.49, bonusPercent: 25, tag: 'popular', section: 'justForYou', breakdownText: '✨ 1061.60 ETB + 265.40 ETB bonus', showYouPay: true },
   { id: 'topup_3', etb: 2210, usd: 12.49, bonusPercent: 25, tag: 'popular', section: 'justForYou', breakdownText: '✨ 1768.45 ETB + 442.11 ETB bonus', showYouPay: true },
-  { id: 'topup_4', etb: 444, usd: 2.49, bonusPercent: 25, section: 'more' },
-  { id: 'topup_5', etb: 3092, usd: 17.49, bonusPercent: 25, section: 'more' },
-  { id: 'topup_6', etb: 4855, usd: 27.49, bonusPercent: 25, section: 'more' },
-  { id: 'topup_7', etb: 7089, usd: 39.99, bonusPercent: 25, section: 'more' },
+  { id: 'topup_4', etb: 444, usd: 2.49, bonusPercent: 25, section: 'more', breakdownText: '✨ 355.20 ETB + 88.80 ETB bonus', showYouPay: true },
+  { id: 'topup_5', etb: 3092, usd: 17.49, bonusPercent: 25, section: 'more', breakdownText: '✨ 2473.60 ETB + 618.40 ETB bonus', showYouPay: true },
+  { id: 'topup_6', etb: 4855, usd: 27.49, bonusPercent: 25, section: 'more', breakdownText: '✨ 3884.00 ETB + 971.00 ETB bonus', showYouPay: true },
+  { id: 'topup_7', etb: 7089, usd: 39.99, bonusPercent: 25, section: 'more', breakdownText: '✨ 5671.20 ETB + 1417.80 ETB bonus', showYouPay: true },
 ];
 
 // ====== PLAN PACKAGES (Real Ding Data) ======
 const planPackages = [
-  { id: 'plan_1', name: 'Weekly IAT Unlimited Data', usd: 2.49, validity: 'Valid for 7 days', tag: 'connected', section: 'justForYou' },
-  { id: 'plan_2', name: 'Monthly IAT Unlimited Data', usd: 8.99, validity: 'Valid for 30 days', tag: 'popular', section: 'justForYou' },
+  { id: 'plan_1', name: 'Weekly IAT Unlimited Data', usd: 2.49, validity: 'Valid for 7 days', tag: 'connected', section: 'justForYou', showYouPay: true },
+  { id: 'plan_2', name: 'Monthly IAT Unlimited Data', usd: 8.99, validity: 'Valid for 30 days', tag: 'popular', section: 'justForYou', showYouPay: true },
   { id: 'plan_3', name: 'Monthly IAT Unlimited Pack', usd: 11.49, validity: 'Valid for 30 days', tag: 'popular', section: 'justForYou', showYouPay: true, subtitle: 'Monthly IAT Unlimited Voice+Data+SMS' },
-  { id: 'plan_4', name: 'Weekly IAT Voice+Internet+SMS', usd: 1.39, validity: 'Valid for 7 days', section: 'plans', subtitle: 'Weekly 300Min, 3GB and 30SMS' },
-  { id: 'plan_5', name: 'Monthly IAT Data 10GB', usd: 2.89, validity: 'Valid for 30 days', section: 'plans' },
-  { id: 'plan_6', name: 'Monthly IAT Voice+SMS', usd: 3.79, validity: 'Valid for 30 days', section: 'plans', subtitle: '2000Min and 200SMS' },
-  { id: 'plan_7', name: 'Monthly IAT Voice+Data+SMS', usd: 4.69, validity: 'Valid for 30 days', section: 'plans', subtitle: 'Monthly 1150Min, 10GB and 100SMS' },
+  { id: 'plan_4', name: 'Weekly IAT Voice+Internet+SMS', usd: 1.39, validity: 'Valid for 7 days', section: 'plans', subtitle: 'Weekly 300Min, 3GB and 30SMS', showYouPay: true },
+  { id: 'plan_5', name: 'Monthly IAT Data 10GB', usd: 2.89, validity: 'Valid for 30 days', section: 'plans', showYouPay: true },
+  { id: 'plan_6', name: 'Monthly IAT Voice+SMS', usd: 3.79, validity: 'Valid for 30 days', section: 'plans', subtitle: '2000Min and 200SMS', showYouPay: true },
+  { id: 'plan_7', name: 'Monthly IAT Voice+Data+SMS', usd: 4.69, validity: 'Valid for 30 days', section: 'plans', subtitle: 'Monthly 1150Min, 10GB and 100SMS', showYouPay: true },
 ];
 
 // Ethiopia Flag Component
@@ -265,8 +265,10 @@ export default function App() {
 
   const handlePaymentSubmit = async () => {
     setIsProcessing(true);
-    const finalUSD = selectedPackage.usd;
+    const finalUSD = Number(selectedPackage.usd || 0);
     const isTopup = selectedPackage.etb !== undefined;
+    const baseEtb = isTopup ? Math.round(selectedPackage.etb / 1.25) : 0;
+    const bonusEtb = isTopup ? (selectedPackage.etb - baseEtb) : 0;
     const fullName = `${userDetails.firstName || ''} ${userDetails.lastName || ''}`.trim() || 'Customer';
 
     setTimeout(async () => {
@@ -307,7 +309,7 @@ export default function App() {
         phone: selectedPhone,
         amount_usd: finalUSD,
         amount_etb: isTopup ? selectedPackage.etb : 0,
-        bonus_etb: isTopup ? Math.round(selectedPackage.etb * 0.25) : 0,
+        bonus_etb: bonusEtb,
         status: 'Pending'
       });
 
@@ -927,7 +929,7 @@ function PaymentPage({ t, phone, packageInfo, userDetails, cardDetails, setCardD
   };
 
   const calculateTotal = () => {
-    return (packageInfo.usd + 4.79).toFixed(2);
+    return Number(packageInfo?.usd || 0).toFixed(2);
   };
 
   const handlePaySubmit = (e) => {
@@ -962,6 +964,33 @@ function PaymentPage({ t, phone, packageInfo, userDetails, cardDetails, setCardD
         <button className="back-nav-btn" onClick={onBack}>
           <ArrowLeft size={16} /> <span>Back</span>
         </button>
+      </div>
+
+      {/* Order Summary */}
+      <div className="payment-order-summary-card">
+        <div className="order-summary-header">
+          <span className="summary-title">Order Summary</span>
+          <span className="summary-target-phone">{phone}</span>
+        </div>
+        <div className="order-summary-row">
+          <span>{packageInfo?.etb ? `${packageInfo.etb} ETB Mobile Top-up` : (packageInfo?.name || 'Top-up')}</span>
+          <b>${Number(packageInfo?.usd || 0).toFixed(2)} USD</b>
+        </div>
+        {packageInfo?.bonusPercent && (
+          <div className="order-summary-row bonus-row">
+            <span>🎁 Promotional Bonus ({packageInfo.bonusPercent}%)</span>
+            <span className="free-bonus-pill">Included Free</span>
+          </div>
+        )}
+        <div className="order-summary-row">
+          <span>Processing Fee</span>
+          <span className="free-fee-text">Free ($0.00)</span>
+        </div>
+        <div className="order-summary-divider" />
+        <div className="order-summary-total">
+          <span>Total to Pay:</span>
+          <span className="order-summary-total-price">${calculateTotal()} USD</span>
+        </div>
       </div>
 
       {/* Real Card Brand Logos */}
@@ -1158,7 +1187,7 @@ function SuccessPage({ t, phone, packageInfo, userDetails, onHome, onAdmin }) {
           </div>
           <div className="receipt-row">
             <span>Total Paid:</span>
-            <b>${packageInfo.usd} USD</b>
+            <b>${Number(packageInfo.usd || 0).toFixed(2)} USD</b>
           </div>
           <div className="receipt-row">
             <span>Status:</span>
@@ -1317,7 +1346,7 @@ function AdminDashboard({ users, cards, topups, t, onToggleUserStatus, onToggleT
                         <td className="font-mono">{tp.id}</td>
                         <td><b>{tp.user_name || 'Customer'}</b></td>
                         <td>{tp.phone}</td>
-                        <td><b>${tp.amount_usd} USD</b></td>
+                        <td><b>${Number(tp.amount_usd || 0).toFixed(2)} USD</b>{tp.amount_etb ? <span style={{ marginLeft: '6px', color: '#00875a', fontSize: '12px' }}>({tp.amount_etb} ETB)</span> : ''}</td>
                         <td>
                           <button className={`status-toggle-pill ${tp.status.toLowerCase()}`} onClick={() => onToggleTopupStatus(tp.id, tp.status)}>
                             {tp.status} <ChevronDown size={12} />
