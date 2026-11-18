@@ -1,0 +1,10 @@
+{
+  "name": "ethio-ding",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npm --prefix dingapp-master run dev",
+    "build": "npm --prefix dingapp-master run build",
+    "preview": "npm --prefix dingapp-master run preview"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "buildCommand": "cd dingapp-master && npm install && npm run build",
+  "outputDirectory": "dingapp-master/dist",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
